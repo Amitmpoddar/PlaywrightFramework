@@ -1,0 +1,42 @@
+// import {test,expect} from '@playwright/test';
+// import { ok } from 'node:assert';
+
+
+
+
+
+
+
+
+
+// test("Api test1", async({request})=>{
+
+//     const response1= await request.post('https://restful-booker.herokuapp.com/auth',{
+//             headers:{
+//                 'Content-Type': 'application/json'
+//             },
+//             data:{
+//                 "username" : "admin",
+//                 "password" : "password123"
+//             },
+            
+//     });
+
+//               const body1 =await response1.json();
+//               expect(response1.status()).toBe(200);
+//               expect(response1.statusText()).toBe('OK');
+//                const token= body1.token;
+//               console.log(token);
+
+    
+//     const response3 = await request.get('https://restful-booker.herokuapp.com/booking');
+    
+               
+//     const body3 =await response3.json();
+//               expect(response3.status()).toBe(200);
+//               expect(response3.statusText()).toBe('OK');
+//               expect(body3[0].bookingid).toBe(1);
+//               expect(response3).toBeOK();  // Validate tatu code 200 or 201
+//               expect(response3.headers()).toHaveProperty('Content-Type', 'application/json');
+//             expect(body3).toMatchObject()
+// })
