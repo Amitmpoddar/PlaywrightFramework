@@ -16,6 +16,9 @@ pipeline {
         DEFAULT_TIMEOUT = '30000'
         EXPECT_TIMEOUT = '10000'
 
+        TEST_USERNAME = 'emilys'
+        TEST_PASSWORD = 'emilyspass'
+
         AUTH_URL = 'https://dummyjson.com/auth/login'
 
         // Not currently used by DummyJSON
