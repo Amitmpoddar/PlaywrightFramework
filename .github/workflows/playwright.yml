@@ -11,7 +11,7 @@ on:
 
   # Scheduled execution - every day at 11:30 PM IST
   schedule:
-    - cron: "41 18 * * *"
+    - cron: "20 01 * * *"
 
   # Manual execution
   workflow_dispatch:
