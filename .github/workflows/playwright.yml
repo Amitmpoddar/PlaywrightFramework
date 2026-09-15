@@ -9,7 +9,6 @@ on:
     branches:
       - main
 
-  # Manual execution
   workflow_dispatch:
     inputs:
       environment:
@@ -27,8 +26,6 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # Push/PR = QA
-      # Manual execution = selected environment
       TEST_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'qa' }}
       ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'qa' }}
 
@@ -42,32 +39,27 @@ jobs:
       CLIENT_ID: not-used
       CLIENT_SECRET: not-used
 
-      # GitHub Repository Secrets
       TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
       TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
 
     steps:
 
-      # 1. Checkout source code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
 
-      # 3. Install dependencies
       - name: Install dependencies
         run: npm ci
 
-      # 4. Install Chromium
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
 
-      # 5. Configure environment URLs
       - name: Configure environment URLs
+        shell: bash
         run: |
           if [ "$TEST_ENV" = "qa" ]; then
             echo "BASE_URL=${{ vars.QA_BASE_URL }}" >> "$GITHUB_ENV"
@@ -86,20 +78,19 @@ jobs:
             exit 1
           fi
 
-      # 6. Display selected environment
-      - name: Display test environment
+      - name: Display selected environment
         run: |
+          echo "=========================================="
           echo "Test Environment: $TEST_ENV"
           echo "Browser: $BROWSER"
           echo "Headless: $HEADLESS"
           echo "Base URL: $BASE_URL"
           echo "API Base URL: $API_BASE_URL"
+          echo "=========================================="
 
-      # 7. Run UI + API tests
       - name: Run UI and API tests
         run: npx playwright test
 
-      # 8. Upload HTML report
       - name: Upload Playwright HTML report
         if: always()
         uses: actions/upload-artifact@v4
@@ -107,16 +98,14 @@ jobs:
           name: playwright-html-report
           path: reports/html-report/
 
-      # 9. Upload JUnit results
-      - name: Upload JUnit test results
+      - name: Upload JUnit results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: junit-test-results
           path: reports/results.xml
 
-      # 10. Upload failure artifacts
-      - name: Upload Playwright failure artifacts
+      - name: Upload failure artifacts
         if: failure()
         uses: actions/upload-artifact@v4
         with:
