@@ -27,8 +27,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # Use selected environment for manual execution.
-      # Push/PR executions continue to use QA.
+      # Push/PR = QA
+      # Manual execution = selected environment
       TEST_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'qa' }}
       ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'qa' }}
 
@@ -38,13 +38,11 @@ jobs:
       DEFAULT_TIMEOUT: 60000
       EXPECT_TIMEOUT: 10000
 
-      BASE_URL: https://www.saucedemo.com/
-      API_BASE_URL: https://dummyjson.com
-
       AUTH_URL: https://dummyjson.com/auth/login
       CLIENT_ID: not-used
       CLIENT_SECRET: not-used
 
+      # GitHub Repository Secrets
       TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
       TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
 
@@ -54,32 +52,54 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Install Node.js
+      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
 
-      # 3. Install npm dependencies
+      # 3. Install dependencies
       - name: Install dependencies
         run: npm ci
 
-      # 4. Install Chromium and required dependencies
+      # 4. Install Chromium
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
 
-      # 5. Display selected environment
+      # 5. Configure environment URLs
+      - name: Configure environment URLs
+        run: |
+          if [ "$TEST_ENV" = "qa" ]; then
+            echo "BASE_URL=${{ vars.QA_BASE_URL }}" >> "$GITHUB_ENV"
+            echo "API_BASE_URL=${{ vars.QA_API_BASE_URL }}" >> "$GITHUB_ENV"
+
+          elif [ "$TEST_ENV" = "uat" ]; then
+            echo "BASE_URL=${{ vars.UAT_BASE_URL }}" >> "$GITHUB_ENV"
+            echo "API_BASE_URL=${{ vars.UAT_API_BASE_URL }}" >> "$GITHUB_ENV"
+
+          elif [ "$TEST_ENV" = "prod" ]; then
+            echo "BASE_URL=${{ vars.PROD_BASE_URL }}" >> "$GITHUB_ENV"
+            echo "API_BASE_URL=${{ vars.PROD_API_BASE_URL }}" >> "$GITHUB_ENV"
+
+          else
+            echo "Invalid environment: $TEST_ENV"
+            exit 1
+          fi
+
+      # 6. Display selected environment
       - name: Display test environment
         run: |
           echo "Test Environment: $TEST_ENV"
           echo "Browser: $BROWSER"
           echo "Headless: $HEADLESS"
+          echo "Base URL: $BASE_URL"
+          echo "API Base URL: $API_BASE_URL"
 
-      # 6. Run UI + API tests
+      # 7. Run UI + API tests
       - name: Run UI and API tests
         run: npx playwright test
 
-      # 7. Upload HTML report
+      # 8. Upload HTML report
       - name: Upload Playwright HTML report
         if: always()
         uses: actions/upload-artifact@v4
@@ -87,7 +107,7 @@ jobs:
           name: playwright-html-report
           path: reports/html-report/
 
-      # 8. Upload JUnit results
+      # 9. Upload JUnit results
       - name: Upload JUnit test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -95,7 +115,7 @@ jobs:
           name: junit-test-results
           path: reports/results.xml
 
-      # 9. Upload failure screenshots/videos/traces
+      # 10. Upload failure artifacts
       - name: Upload Playwright failure artifacts
         if: failure()
         uses: actions/upload-artifact@v4
