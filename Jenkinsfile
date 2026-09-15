@@ -6,7 +6,7 @@ pipeline {
     // Scheduled Build
     // ==========================================
     triggers {
-        // Every day at 10:10 AM
+        // Every day at 11:50 AM
         cron('50 11 * * *')
     }
 
@@ -34,17 +34,22 @@ pipeline {
         EXPECT_TIMEOUT = '10000'
 
         // -----------------------------
-        // Test User
-        // -----------------------------
-        TEST_USERNAME = 'emilys'
-        TEST_PASSWORD = 'emilyspass'
-
-        // -----------------------------
         // Authentication
         // -----------------------------
         AUTH_URL = 'https://dummyjson.com/auth/login'
         CLIENT_ID = 'not-used'
         CLIENT_SECRET = 'not-used'
+
+        // -----------------------------
+        // Jenkins Credentials
+        // -----------------------------
+        // Credential ID created in Jenkins
+        TEST_CREDENTIALS = credentials('api-test-user')
+
+        // Map Jenkins credentials to
+        // variables expected by env.ts
+        TEST_USERNAME = "${TEST_CREDENTIALS_USR}"
+        TEST_PASSWORD = "${TEST_CREDENTIALS_PSW}"
     }
 
     stages {
@@ -102,15 +107,31 @@ pipeline {
                 allowEmptyResults: true
             )
 
-            // Generate / publish Allure report
-            allure(
-                includeProperties: false,
-                results: [
-                    [path: 'allure-results']
-                ]
-            )
+            // --------------------------------------
+            // Publish Allure report only when
+            // allure-results directory exists
+            // --------------------------------------
+            script {
 
-            // Archive Playwright reports
+                if (fileExists('allure-results')) {
+
+                    allure(
+                        includeProperties: false,
+                        results: [
+                            [path: 'allure-results']
+                        ]
+                    )
+
+                } else {
+
+                    echo 'Allure results not found. Skipping Allure report.'
+
+                }
+            }
+
+            // --------------------------------------
+            // Archive Playwright and Allure results
+            // --------------------------------------
             archiveArtifacts(
                 artifacts: 'reports/**/*, allure-results/**/*',
                 allowEmptyArchive: true
@@ -153,7 +174,7 @@ Jenkins
         failure {
 
             emailext(
-                to: 'YOUR_GMAIL_ADDRESS@gmail.com',
+                to: 'amitmpoddar@gmail.com',
                 subject: "FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
 Hello,
