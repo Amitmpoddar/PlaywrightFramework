@@ -61,6 +61,8 @@ jobs:
       - name: Configure environment URLs
         shell: bash
         run: |
+          echo "Selected environment: $TEST_ENV"
+
           if [ "$TEST_ENV" = "qa" ]; then
             echo "BASE_URL=${{ vars.QA_BASE_URL }}" >> "$GITHUB_ENV"
             echo "API_BASE_URL=${{ vars.QA_API_BASE_URL }}" >> "$GITHUB_ENV"
@@ -78,7 +80,8 @@ jobs:
             exit 1
           fi
 
-      - name: Display selected environment
+      - name: Validate environment variables
+        shell: bash
         run: |
           echo "=========================================="
           echo "Test Environment: $TEST_ENV"
@@ -87,6 +90,18 @@ jobs:
           echo "Base URL: $BASE_URL"
           echo "API Base URL: $API_BASE_URL"
           echo "=========================================="
+
+          if [ -z "$BASE_URL" ]; then
+            echo "ERROR: BASE_URL is empty"
+            exit 1
+          fi
+
+          if [ -z "$API_BASE_URL" ]; then
+            echo "ERROR: API_BASE_URL is empty"
+            exit 1
+          fi
+
+          echo "Environment variables are available."
 
       - name: Run UI and API tests
         run: npx playwright test
