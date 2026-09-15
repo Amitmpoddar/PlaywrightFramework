@@ -79,6 +79,10 @@ pipeline {
     }
 
 
+    // ==========================================
+    // Stages
+    // ==========================================
+
     stages {
 
 
@@ -166,7 +170,7 @@ pipeline {
 
             steps {
 
-                bat 'npm ci'
+                sh 'npm ci'
             }
         }
 
@@ -179,7 +183,7 @@ pipeline {
 
             steps {
 
-                bat 'npx playwright install chromium'
+                sh 'npx playwright install chromium'
             }
         }
 
@@ -192,7 +196,7 @@ pipeline {
 
             steps {
 
-                bat 'npx playwright test --project=api'
+                sh 'npx playwright test --project=api'
             }
         }
     }
@@ -204,7 +208,6 @@ pipeline {
 
     post {
 
-
         // ------------------------------------------
         // Always
         // ------------------------------------------
@@ -215,30 +218,18 @@ pipeline {
             // JUnit Results
             // --------------------------------------
 
-            junit(
-                testResults: 'reports/results.xml',
-                allowEmptyResults: true
-            )
-
-
-            // --------------------------------------
-            // Allure Report
-            // --------------------------------------
-
             script {
 
-                if (fileExists('allure-results')) {
+                if (fileExists('reports/results.xml')) {
 
-                    allure(
-                        includeProperties: false,
-                        results: [
-                            [path: 'allure-results']
-                        ]
+                    junit(
+                        testResults: 'reports/results.xml',
+                        allowEmptyResults: true
                     )
 
                 } else {
 
-                    echo 'Allure results not found. Skipping Allure report.'
+                    echo 'JUnit results not found. Skipping JUnit publishing.'
                 }
             }
 
@@ -256,81 +247,31 @@ pipeline {
 
 
         // ------------------------------------------
-        // SUCCESS Email
+        // SUCCESS
         // ------------------------------------------
 
         success {
 
-            emailext(
-
-                to: 'amitmpoddar@gmail.com',
-
-                subject:
-                    "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-
-                body:
-"""
-Hello,
-
-Playwright API Automation execution completed successfully.
-
-Job         : ${env.JOB_NAME}
-Build       : #${env.BUILD_NUMBER}
-Environment : ${params.TEST_ENV}
-Status      : ${currentBuild.currentResult}
-
-Jenkins Build:
-${env.BUILD_URL}
-
-Allure Report:
-${env.BUILD_URL}allure
-
-Regards,
-Jenkins
-""",
-
-                attachLog: true
-            )
+            echo "=========================================="
+            echo "PLAYWRIGHT API TESTS PASSED"
+            echo "Environment : ${params.TEST_ENV}"
+            echo "Build       : #${env.BUILD_NUMBER}"
+            echo "=========================================="
         }
 
 
         // ------------------------------------------
-        // FAILURE Email
+        // FAILURE
         // ------------------------------------------
 
         failure {
 
-            emailext(
-
-                to: 'amitmpoddar@gmail.com',
-
-                subject:
-                    "FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-
-                body:
-"""
-Hello,
-
-Playwright API Automation execution FAILED.
-
-Job         : ${env.JOB_NAME}
-Build       : #${env.BUILD_NUMBER}
-Environment : ${params.TEST_ENV}
-Status      : ${currentBuild.currentResult}
-
-Please check the Jenkins build:
-
-${env.BUILD_URL}
-
-Allure Report:
-${env.BUILD_URL}allure
-
-Regards,
-Jenkins
-""",
-
-                attachLog: true
-            )
+            echo "=========================================="
+            echo "PLAYWRIGHT API TESTS FAILED"
+            echo "Environment : ${params.TEST_ENV}"
+            echo "Build       : #${env.BUILD_NUMBER}"
+            echo "Check Jenkins console output and reports."
+            echo "=========================================="
         }
     }
 }
