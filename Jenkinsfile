@@ -5,6 +5,7 @@ pipeline {
     // ==========================================
     // Build Parameters
     // ==========================================
+
     parameters {
 
         choice(
@@ -18,6 +19,7 @@ pipeline {
     // ==========================================
     // Scheduled Build
     // ==========================================
+
     triggers {
 
         // Every day at 11:50 AM
@@ -28,6 +30,7 @@ pipeline {
     // ==========================================
     // Global Environment Variables
     // ==========================================
+
     environment {
 
         // --------------------------------------
@@ -50,12 +53,12 @@ pipeline {
         // Timeout Configuration
         // --------------------------------------
 
-        DEFAULT_TIMEOUT = '30000'
+        DEFAULT_TIMEOUT = '60000'
         EXPECT_TIMEOUT = '10000'
 
 
         // --------------------------------------
-        // Authentication
+        // API Authentication
         // --------------------------------------
 
         AUTH_URL = 'https://dummyjson.com/auth/login'
@@ -102,43 +105,51 @@ pipeline {
 
                 script {
 
-                    if (params.TEST_ENV == 'qa') {
+                    switch (params.TEST_ENV) {
 
-                        env.BASE_URL =
-                            'https://practice-automation.com/'
+                        case 'qa':
 
-                        env.API_BASE_URL =
-                            'https://dummyjson.com'
+                            env.BASE_URL =
+                                'https://www.saucedemo.com/'
 
+                            env.API_BASE_URL =
+                                'https://dummyjson.com'
 
-                    } else if (params.TEST_ENV == 'uat') {
-
-                        env.BASE_URL =
-                            'https://practice-automation.com/'
-
-                        env.API_BASE_URL =
-                            'https://dummyjson.com'
+                            break
 
 
-                    } else if (params.TEST_ENV == 'prod') {
+                        case 'uat':
 
-                        env.BASE_URL =
-                            'https://practice-automation.com/'
+                            env.BASE_URL =
+                                'https://www.saucedemo.com/'
 
-                        env.API_BASE_URL =
-                            'https://dummyjson.com'
+                            env.API_BASE_URL =
+                                'https://dummyjson.com'
+
+                            break
 
 
-                    } else {
+                        case 'prod':
 
-                        error(
-                            "Unsupported environment: ${params.TEST_ENV}"
-                        )
+                            env.BASE_URL =
+                                'https://www.saucedemo.com/'
+
+                            env.API_BASE_URL =
+                                'https://dummyjson.com'
+
+                            break
+
+
+                        default:
+
+                            error(
+                                "Unsupported environment: ${params.TEST_ENV}"
+                            )
                     }
 
 
                     echo "=========================================="
-                    echo "Test Environment : ${params.TEST_ENV}"
+                    echo "Test Environment : ${env.ENV}"
                     echo "Base URL         : ${env.BASE_URL}"
                     echo "API Base URL     : ${env.API_BASE_URL}"
                     echo "=========================================="
@@ -237,7 +248,8 @@ pipeline {
             // --------------------------------------
 
             archiveArtifacts(
-                artifacts: 'reports/**/*, allure-results/**/*',
+                artifacts:
+                    'reports/**/*, allure-results/**/*',
                 allowEmptyArchive: true
             )
         }
@@ -267,7 +279,7 @@ Build       : #${env.BUILD_NUMBER}
 Environment : ${params.TEST_ENV}
 Status      : ${currentBuild.currentResult}
 
-Test Report:
+Jenkins Build:
 ${env.BUILD_URL}
 
 Allure Report:
