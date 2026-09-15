@@ -8,5 +8,5 @@
     "skipLibCheck": true,
     "types": ["node", "@playwright/test"]
   },
-  "include": ["**/*.ts", "tests/ui/auth.setup", "tests/ui/au", "tests/ui/aut"]
+  "include": ["**/*.ts", "tests/ui/auth.setup", "tests/ui/au", "tests/ui/auth.setup.ts"]
 }

@@ -9,4 +9,3 @@ playwright/.auth/
 constants/
 pages/
 playwright/
-tests/ui/

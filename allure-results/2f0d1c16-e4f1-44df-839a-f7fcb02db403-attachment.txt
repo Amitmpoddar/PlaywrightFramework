@@ -1,0 +1,7 @@
+Created User: UserResponse {
+  id: 209,
+  username: '',
+  email: '',
+  firstName: 'Amit',
+  lastName: 'Tester'
+}

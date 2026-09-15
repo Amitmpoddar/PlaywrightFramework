@@ -113,6 +113,10 @@ export default defineConfig({
     {
       name: "chromium",
 
+      // IMPORTANT:
+      // Only UI tests will be picked up
+      testDir: "./tests/ui",
+
       use: {
         ...devices["Desktop Chrome"],
 
@@ -130,6 +134,7 @@ export default defineConfig({
     {
       name: "api",
 
+      // Only API tests will be picked up
       testDir: "./tests/api",
 
       use: {
