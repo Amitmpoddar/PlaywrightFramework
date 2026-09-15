@@ -6,7 +6,8 @@ pipeline {
     // Scheduled Build
     // ==========================================
     triggers {
-        cron('0 10 * * *')
+        // Every day at 10:10 AM
+        cron('50 11 * * *')
     }
 
     environment {
@@ -89,10 +90,92 @@ pipeline {
     // Post Build
     // ==========================================
     post {
+
+        // ------------------------------------------
+        // Always execute
+        // ------------------------------------------
         always {
-            archiveArtifacts artifacts:
-                'reports/**/*',
+
+            // Publish JUnit test results
+            junit(
+                testResults: 'reports/results.xml',
+                allowEmptyResults: true
+            )
+
+            // Generate / publish Allure report
+            allure(
+                includeProperties: false,
+                results: [
+                    [path: 'allure-results']
+                ]
+            )
+
+            // Archive Playwright reports
+            archiveArtifacts(
+                artifacts: 'reports/**/*, allure-results/**/*',
                 allowEmptyArchive: true
+            )
+        }
+
+        // ------------------------------------------
+        // Email when build succeeds
+        // ------------------------------------------
+        success {
+
+            emailext(
+                to: 'amitmpoddar@gmail.com',
+                subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+Hello,
+
+Playwright API Automation execution completed successfully.
+
+Job        : ${env.JOB_NAME}
+Build      : #${env.BUILD_NUMBER}
+Status     : ${currentBuild.currentResult}
+
+Test Report:
+${env.BUILD_URL}
+
+Allure Report:
+${env.BUILD_URL}allure
+
+Regards,
+Jenkins
+""",
+                attachLog: true
+            )
+        }
+
+        // ------------------------------------------
+        // Email when build fails
+        // ------------------------------------------
+        failure {
+
+            emailext(
+                to: 'YOUR_GMAIL_ADDRESS@gmail.com',
+                subject: "FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+Hello,
+
+Playwright API Automation execution FAILED.
+
+Job        : ${env.JOB_NAME}
+Build      : #${env.BUILD_NUMBER}
+Status     : ${currentBuild.currentResult}
+
+Please check the Jenkins build:
+
+${env.BUILD_URL}
+
+Allure Report:
+${env.BUILD_URL}allure
+
+Regards,
+Jenkins
+""",
+                attachLog: true
+            )
         }
     }
 }

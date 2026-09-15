@@ -36,8 +36,11 @@ export default defineConfig({
 
   // Reports
   reporter: [
+
+    // Console report
     ["list"],
 
+    // Playwright HTML report
     [
       "html",
       {
@@ -46,6 +49,7 @@ export default defineConfig({
       }
     ],
 
+    // JSON report
     [
       "json",
       {
@@ -53,10 +57,19 @@ export default defineConfig({
       }
     ],
 
+    // JUnit report
     [
       "junit",
       {
         outputFile: "reports/results.xml"
+      }
+    ],
+
+    // Allure report
+    [
+      "allure-playwright",
+      {
+        resultsDir: "allure-results"
       }
     ]
   ],
@@ -123,7 +136,6 @@ export default defineConfig({
         baseURL: ENV.apiBaseURL
       }
     }
-
   ],
 
   // Output folder
