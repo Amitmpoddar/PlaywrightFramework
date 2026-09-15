@@ -9,13 +9,28 @@ on:
     branches:
       - main
 
+  # Manual execution
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Select test environment"
+        required: true
+        default: qa
+        type: choice
+        options:
+          - qa
+          - uat
+          - prod
+
 jobs:
   playwright-tests:
     runs-on: ubuntu-latest
 
     env:
-      TEST_ENV: qa
-      ENV: qa
+      # Use selected environment for manual execution.
+      # Push/PR executions continue to use QA.
+      TEST_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'qa' }}
+      ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'qa' }}
 
       BROWSER: chromium
       HEADLESS: true
@@ -53,11 +68,18 @@ jobs:
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
 
-      # 5. Run UI + API tests
+      # 5. Display selected environment
+      - name: Display test environment
+        run: |
+          echo "Test Environment: $TEST_ENV"
+          echo "Browser: $BROWSER"
+          echo "Headless: $HEADLESS"
+
+      # 6. Run UI + API tests
       - name: Run UI and API tests
         run: npx playwright test
 
-      # 6. Upload HTML report
+      # 7. Upload HTML report
       - name: Upload Playwright HTML report
         if: always()
         uses: actions/upload-artifact@v4
@@ -65,7 +87,7 @@ jobs:
           name: playwright-html-report
           path: reports/html-report/
 
-      # 7. Upload JUnit results
+      # 8. Upload JUnit results
       - name: Upload JUnit test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -73,7 +95,7 @@ jobs:
           name: junit-test-results
           path: reports/results.xml
 
-      # 8. Upload failure screenshots/videos/traces
+      # 9. Upload failure screenshots/videos/traces
       - name: Upload Playwright failure artifacts
         if: failure()
         uses: actions/upload-artifact@v4
