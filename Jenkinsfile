@@ -6,7 +6,7 @@ pipeline {
     // Scheduled Build
     // ==========================================
     triggers {
-        cron('10 10 * * *')
+        cron('0 10 * * *')
     }
 
     environment {
