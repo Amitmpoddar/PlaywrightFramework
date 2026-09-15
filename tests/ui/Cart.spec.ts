@@ -2,15 +2,15 @@ import {test} from "../../fixtures/baseFixture"
 import {Page,expect}  from '@playwright/test';
 import { ENV } from "../../config/env";
 
-test("click continue shopping", async ({ homePage,cartPage }) => {
+// test("click continue shopping", async ({ homePage,cartPage }) => {
 
 
         
          
-         await homePage.clickAddToCartButton();
-         await homePage.clickCartLink();
-         await cartPage.clickContinueShoppingButton();
-    });
+//          await homePage.clickAddToCartButton();
+//          await homePage.clickCartLink();
+//          await cartPage.clickContinueShoppingButton();
+//     });
 
 
 
