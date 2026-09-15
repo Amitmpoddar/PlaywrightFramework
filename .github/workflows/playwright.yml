@@ -1,4 +1,4 @@
-name: Playwright API Tests
+name: Playwright UI and API Tests
 
 on:
   push:
@@ -10,12 +10,13 @@ on:
       - main
 
 jobs:
-  api-tests:
+  playwright-tests:
     runs-on: ubuntu-latest
 
     env:
       TEST_ENV: qa
       ENV: qa
+
       BROWSER: chromium
       HEADLESS: true
 
@@ -33,23 +34,30 @@ jobs:
       TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
 
     steps:
+
+      # 1. Checkout source code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2. Install Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
 
+      # 3. Install npm dependencies
       - name: Install dependencies
         run: npm ci
 
+      # 4. Install Chromium and required dependencies
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
 
-      - name: Run API tests
-        run: npx playwright test --project=api
+      # 5. Run UI + API tests
+      - name: Run UI and API tests
+        run: npx playwright test
 
+      # 6. Upload HTML report
       - name: Upload Playwright HTML report
         if: always()
         uses: actions/upload-artifact@v4
@@ -57,6 +65,7 @@ jobs:
           name: playwright-html-report
           path: reports/html-report/
 
+      # 7. Upload JUnit results
       - name: Upload JUnit test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -64,6 +73,7 @@ jobs:
           name: junit-test-results
           path: reports/results.xml
 
+      # 8. Upload failure screenshots/videos/traces
       - name: Upload Playwright failure artifacts
         if: failure()
         uses: actions/upload-artifact@v4
