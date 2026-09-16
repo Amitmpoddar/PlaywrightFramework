@@ -1,3 +1,4 @@
+
 import { defineConfig, devices } from "@playwright/test";
 import { ENV } from "./config/env";
 import path from "path";
@@ -9,72 +10,110 @@ const authFile = path.resolve(
   "user.json"
 );
 
+// --------------------------------------------------
+// Report paths
+// --------------------------------------------------
+
+const reportPrefix = process.env.REPORT_PREFIX || "default";
+
+const htmlReport = `reports/${reportPrefix}/html-report`;
+const jsonReport = `reports/${reportPrefix}/results.json`;
+const junitReport = `reports/${reportPrefix}/results.xml`;
+const allureResults = `allure-results/${reportPrefix}`;
+
 export default defineConfig({
 
+  // --------------------------------------------------
   // Test location
+  // --------------------------------------------------
+
   testDir: "./tests",
 
+  // --------------------------------------------------
   // Global timeout
+  // --------------------------------------------------
+
   timeout: ENV.timeout.default,
 
+  // --------------------------------------------------
   // Assertion timeout
+  // --------------------------------------------------
+
   expect: {
     timeout: ENV.timeout.expect
   },
 
-  // Run tests in parallel
+  // --------------------------------------------------
+  // Parallel execution
+  // --------------------------------------------------
+
   fullyParallel: true,
 
+  // --------------------------------------------------
   // Prevent accidental test.only in CI
+  // --------------------------------------------------
+
   forbidOnly: !!process.env.CI,
 
+  // --------------------------------------------------
   // Retry failed tests in CI
+  // --------------------------------------------------
+
   retries: process.env.CI ? 2 : 0,
 
+  // --------------------------------------------------
   // Parallel workers
+  // --------------------------------------------------
+
   workers: process.env.CI ? 2 : undefined,
 
+  // --------------------------------------------------
   // Reports
+  // --------------------------------------------------
+
   reporter: [
 
-    // Console report
+    // Console
     ["list"],
 
-    // Playwright HTML report
+    // HTML
     [
       "html",
       {
-        outputFolder: "reports/html-report",
+        outputFolder: htmlReport,
         open: "never"
       }
     ],
 
-    // JSON report
+    // JSON
     [
       "json",
       {
-        outputFile: "reports/results.json"
+        outputFile: jsonReport
       }
     ],
 
-    // JUnit report
+    // JUnit
     [
       "junit",
       {
-        outputFile: "reports/results.xml"
+        outputFile: junitReport
       }
     ],
 
-    // Allure report
+    // Allure
     [
       "allure-playwright",
       {
-        resultsDir: "allure-results"
+        resultsDir: allureResults
       }
     ]
   ],
 
+  // --------------------------------------------------
   // Common settings
+  // --------------------------------------------------
+
   use: {
 
     baseURL: ENV.baseURL,
@@ -95,12 +134,16 @@ export default defineConfig({
     trace: "retain-on-failure"
   },
 
+  // --------------------------------------------------
   // Projects
+  // --------------------------------------------------
+
   projects: [
 
     // --------------------------------
     // Authentication setup
     // --------------------------------
+
     {
       name: "setup",
 
@@ -110,11 +153,10 @@ export default defineConfig({
     // --------------------------------
     // UI - Chromium
     // --------------------------------
+
     {
       name: "chromium",
 
-      // IMPORTANT:
-      // Only UI tests will be picked up
       testDir: "./tests/ui",
 
       use: {
@@ -129,12 +171,12 @@ export default defineConfig({
     },
 
     // --------------------------------
-    // API Tests
+    // API
     // --------------------------------
+
     {
       name: "api",
 
-      // Only API tests will be picked up
       testDir: "./tests/api",
 
       use: {
@@ -143,6 +185,9 @@ export default defineConfig({
     }
   ],
 
-  // Output folder
+  // --------------------------------------------------
+  // Test artifacts
+  // --------------------------------------------------
+
   outputDir: "test-results/"
 });

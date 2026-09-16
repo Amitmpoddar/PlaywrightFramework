@@ -1,4 +1,3 @@
-
 pipeline {
 
     agent any
@@ -34,33 +33,14 @@ pipeline {
 
     environment {
 
-        // --------------------------------------
-        // Selected Environment
-        // --------------------------------------
-
         TEST_ENV = "${params.TEST_ENV}"
         ENV = "${params.TEST_ENV}"
-
-
-        // --------------------------------------
-        // Browser Configuration
-        // --------------------------------------
 
         BROWSER = 'chromium'
         HEADLESS = 'true'
 
-
-        // --------------------------------------
-        // Timeout Configuration
-        // --------------------------------------
-
         DEFAULT_TIMEOUT = '60000'
         EXPECT_TIMEOUT = '10000'
-
-
-        // --------------------------------------
-        // API Authentication
-        // --------------------------------------
 
         AUTH_URL = 'https://dummyjson.com/auth/login'
 
@@ -181,24 +161,61 @@ pipeline {
 
 
         // ==========================================
-        // Stage 5 - Run UI + API Tests
+        // Stage 5 - Run UI + API Tests in Parallel
         // ==========================================
 
-        stage('Run Playwright Tests') {
+        stage('Run Tests in Parallel') {
 
-            steps {
+            parallel {
 
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'api-test-user',
-                        usernameVariable: 'TEST_USERNAME',
-                        passwordVariable: 'TEST_PASSWORD'
-                    )
-                ]) {
 
-                    sh '''
-                        npx playwright test
-                    '''
+                // ==================================
+                // UI Tests
+                // ==================================
+
+                stage('UI Tests') {
+
+                    steps {
+
+                        withCredentials([
+                            usernamePassword(
+                                credentialsId: 'api-test-user',
+                                usernameVariable: 'TEST_USERNAME',
+                                passwordVariable: 'TEST_PASSWORD'
+                            )
+                        ]) {
+
+                            sh '''
+                                REPORT_PREFIX=ui \
+                                npx playwright test --project=chromium
+                            '''
+                        }
+                    }
+                }
+
+
+                // ==================================
+                // API Tests
+                // ==================================
+
+                stage('API Tests') {
+
+                    steps {
+
+                        withCredentials([
+                            usernamePassword(
+                                credentialsId: 'api-test-user',
+                                usernameVariable: 'TEST_USERNAME',
+                                passwordVariable: 'TEST_PASSWORD'
+                            )
+                        ]) {
+
+                            sh '''
+                                REPORT_PREFIX=api \
+                                npx playwright test --project=api
+                            '''
+                        }
+                    }
                 }
             }
         }
@@ -217,18 +234,19 @@ pipeline {
 
         always {
 
+
             // --------------------------------------
             // JUnit Results
             // --------------------------------------
 
             script {
 
-                if (fileExists('reports/results.xml')) {
+                if (fileExists('reports')) {
 
                     echo 'Publishing JUnit results...'
 
                     junit(
-                        testResults: 'reports/results.xml',
+                        testResults: 'reports/**/results.xml',
                         allowEmptyResults: true,
                         skipPublishingChecks: true,
                         skipMarkingBuildUnstable: true,
@@ -248,7 +266,10 @@ pipeline {
 
             script {
 
-                if (fileExists('allure-results')) {
+                if (
+                    fileExists('allure-results/ui') ||
+                    fileExists('allure-results/api')
+                ) {
 
                     echo 'Publishing Allure report...'
 
@@ -256,7 +277,8 @@ pipeline {
                         includeProperties: false,
                         resultPolicy: 'LEAVE_AS_IS',
                         results: [
-                            [path: 'allure-results']
+                            [path: 'allure-results/ui'],
+                            [path: 'allure-results/api']
                         ]
                     )
 
@@ -308,4 +330,3 @@ pipeline {
         }
     }
 }
-
