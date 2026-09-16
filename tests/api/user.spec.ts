@@ -382,9 +382,3 @@ test(
             .toBeDefined();
     }
 );
-
-
-
-test("Jenkins failure handling test", async () => {
-    expect(1).toBe(2);
-});
