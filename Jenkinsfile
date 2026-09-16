@@ -1,4 +1,4 @@
-
+```groovy
 pipeline {
 
     agent any
@@ -66,16 +66,6 @@ pipeline {
 
         CLIENT_ID = 'not-used'
         CLIENT_SECRET = 'not-used'
-
-
-        // --------------------------------------
-        // Jenkins Credentials
-        // --------------------------------------
-
-        TEST_CREDENTIALS = credentials('api-test-user')
-
-        TEST_USERNAME = "${TEST_CREDENTIALS_USR}"
-        TEST_PASSWORD = "${TEST_CREDENTIALS_PSW}"
     }
 
 
@@ -183,7 +173,18 @@ pipeline {
 
             steps {
 
-                sh 'npx playwright test --project=api'
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'api-test-user',
+                        usernameVariable: 'TEST_USERNAME',
+                        passwordVariable: 'TEST_PASSWORD'
+                    )
+                ]) {
+
+                    sh '''
+                        npx playwright test --project=api
+                    '''
+                }
             }
         }
     }
@@ -238,9 +239,7 @@ pipeline {
 
                     allure(
                         includeProperties: false,
-
                         resultPolicy: 'LEAVE_AS_IS',
-
                         results: [
                             [path: 'allure-results']
                         ]
@@ -294,4 +293,4 @@ pipeline {
         }
     }
 }
-
+```
