@@ -65,7 +65,6 @@ pipeline {
         AUTH_URL = 'https://dummyjson.com/auth/login'
 
         CLIENT_ID = 'not-used'
-
         CLIENT_SECRET = 'not-used'
 
 
@@ -215,7 +214,9 @@ pipeline {
                     junit(
                         testResults: 'reports/results.xml',
                         allowEmptyResults: true,
-                        skipPublishingChecks: true
+                        skipPublishingChecks: true,
+                        skipMarkingBuildUnstable: true,
+                        skipMarkingStageUnstable: true
                     )
 
                 } else {
@@ -237,6 +238,9 @@ pipeline {
 
                     allure(
                         includeProperties: false,
+
+                        resultPolicy: 'LEAVE_AS_IS',
+
                         results: [
                             [path: 'allure-results']
                         ]
@@ -258,19 +262,6 @@ pipeline {
                     'reports/**/*, allure-results/**/*',
                 allowEmptyArchive: true
             )
-
-
-            // --------------------------------------
-            // Final Build Status
-            // --------------------------------------
-
-            script {
-
-                echo "Tests completed successfully."
-                echo "Setting Jenkins build result to SUCCESS."
-
-                currentBuild.result = 'SUCCESS'
-            }
         }
 
 
@@ -303,3 +294,4 @@ pipeline {
         }
     }
 }
+
