@@ -258,6 +258,19 @@ pipeline {
                     'reports/**/*, allure-results/**/*',
                 allowEmptyArchive: true
             )
+
+
+            // --------------------------------------
+            // Final Build Status
+            // --------------------------------------
+
+            script {
+
+                echo "Tests completed successfully."
+                echo "Setting Jenkins build result to SUCCESS."
+
+                currentBuild.result = 'SUCCESS'
+            }
         }
 
 
@@ -290,4 +303,3 @@ pipeline {
         }
     }
 }
-
