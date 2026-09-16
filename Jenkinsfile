@@ -1,3 +1,4 @@
+```groovy
 pipeline {
 
     agent any
@@ -213,7 +214,8 @@ pipeline {
 
                     junit(
                         testResults: 'reports/results.xml',
-                        allowEmptyResults: true
+                        allowEmptyResults: true,
+                        skipPublishingChecks: true
                     )
 
                 } else {
@@ -288,3 +290,4 @@ pipeline {
         }
     }
 }
+```
