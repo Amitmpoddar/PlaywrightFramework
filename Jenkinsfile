@@ -176,20 +176,7 @@ pipeline {
 
 
         // ==========================================
-        // Stage 4 - Install Playwright Browsers
-        // ==========================================
-
-        stage('Install Playwright Browsers') {
-
-            steps {
-
-                sh 'npx playwright install --with-deps chromium'
-            }
-        }
-
-
-        // ==========================================
-        // Stage 5 - Run API Tests
+        // Stage 4 - Run API Tests
         // ==========================================
 
         stage('Run API Tests') {
@@ -221,6 +208,8 @@ pipeline {
             script {
 
                 if (fileExists('reports/results.xml')) {
+
+                    echo 'Publishing JUnit results...'
 
                     junit(
                         testResults: 'reports/results.xml',
