@@ -164,3 +164,147 @@ pipeline {
             }
         }
 
+
+        // ==========================================
+        // Stage 4 - Install Playwright Browser
+        // ==========================================
+
+        stage('Install Playwright Browser') {
+
+            steps {
+
+                sh '''
+                    npx playwright install chromium
+                '''
+            }
+        }
+
+
+        // ==========================================
+        // Stage 5 - Run UI + API Tests
+        // ==========================================
+
+        stage('Run Playwright Tests') {
+
+            steps {
+
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'api-test-user',
+                        usernameVariable: 'TEST_USERNAME',
+                        passwordVariable: 'TEST_PASSWORD'
+                    )
+                ]) {
+
+                    sh '''
+                        npx playwright test
+                    '''
+                }
+            }
+        }
+    }
+
+
+    // ==========================================
+    // Post Build
+    // ==========================================
+
+    post {
+
+        // ==========================================
+        // ALWAYS
+        // ==========================================
+
+        always {
+
+            // --------------------------------------
+            // JUnit Results
+            // --------------------------------------
+
+            script {
+
+                if (fileExists('reports/results.xml')) {
+
+                    echo 'Publishing JUnit results...'
+
+                    junit(
+                        testResults: 'reports/results.xml',
+                        allowEmptyResults: true,
+                        skipPublishingChecks: true,
+                        skipMarkingBuildUnstable: true,
+                        skipMarkingStageUnstable: true
+                    )
+
+                } else {
+
+                    echo 'JUnit results not found. Skipping JUnit publishing.'
+                }
+            }
+
+
+            // --------------------------------------
+            // Allure Report
+            // --------------------------------------
+
+            script {
+
+                if (fileExists('allure-results')) {
+
+                    echo 'Publishing Allure report...'
+
+                    allure(
+                        includeProperties: false,
+                        resultPolicy: 'LEAVE_AS_IS',
+                        results: [
+                            [path: 'allure-results']
+                        ]
+                    )
+
+                } else {
+
+                    echo 'Allure results not found. Skipping Allure report.'
+                }
+            }
+
+
+            // --------------------------------------
+            // Archive Reports
+            // --------------------------------------
+
+            archiveArtifacts(
+                artifacts:
+                    'reports/**/*, allure-results/**/*',
+                allowEmptyArchive: true
+            )
+        }
+
+
+        // ==========================================
+        // SUCCESS
+        // ==========================================
+
+        success {
+
+            echo "=========================================="
+            echo "PLAYWRIGHT UI + API TESTS PASSED"
+            echo "Environment : ${params.TEST_ENV}"
+            echo "Build       : #${env.BUILD_NUMBER}"
+            echo "=========================================="
+        }
+
+
+        // ==========================================
+        // FAILURE
+        // ==========================================
+
+        failure {
+
+            echo "=========================================="
+            echo "PLAYWRIGHT UI + API TESTS FAILED"
+            echo "Environment : ${params.TEST_ENV}"
+            echo "Build       : #${env.BUILD_NUMBER}"
+            echo "Check Jenkins console output and reports."
+            echo "=========================================="
+        }
+    }
+}
